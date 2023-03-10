@@ -1,15 +1,18 @@
 import Shape from "./Shape";
+
+const fixedLength = 50;
 class Line extends Shape {
-  constructor(x1, y1, x2, y2, fill, stroke, lineWidth) {
-    super((x1 + x2) / 2, (y1 + y2) / 2, fill, stroke);
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
+  constructor(x,y, fill, stroke, lineWidth) {
+    super(x, y, fill, stroke);
+    this.x1 = x-fixedLength;
+    this.y1 = y;
+    this.x2 = x+fixedLength;
+    this.y2 = y;
     this.lineWidth = lineWidth;
     this.handleSize = 8;
     this.selectedHandle = null;
   }
+
 
   draw(ctx) {
     ctx.beginPath();

@@ -1,18 +1,19 @@
 import Shape from "./Shape";
+import MarkUp from "./MarkUp";
 
 const fixedLength = 50;
 class Line extends Shape {
-  constructor(x,y, fill, stroke, lineWidth) {
+  constructor(x, y, id, fill, stroke, lineWidth) {
     super(x, y, fill, stroke);
-    this.x1 = x-fixedLength;
+    this.x1 = x - fixedLength;
     this.y1 = y;
-    this.x2 = x+fixedLength;
+    this.x2 = x + fixedLength;
     this.y2 = y;
     this.lineWidth = lineWidth;
-    this.handleSize = 8;
+    this.handleSize = 6;
     this.selectedHandle = null;
+    this.uniqueId = id;
   }
-
 
   draw(ctx) {
     ctx.beginPath();
@@ -26,7 +27,16 @@ class Line extends Shape {
     if (this.selected) {
       this.drawHandles(ctx);
     }
-    console.log("draw", this.x1, this.y1, this.x2, this.y2);
+    MarkUp.updateMarkUpElement({
+      id: this.uniqueId,
+      x1: this.x1,
+      y1: this.y1,
+      x2: this.x2,
+      y2: this.y2,
+      stroke: this.stroke,
+      fill: this.fill,
+      lineWidth: this.lineWidth,
+    });
   }
 
   drawHandles(ctx) {
@@ -48,23 +58,23 @@ class Line extends Shape {
     );
 
     // Draw handle to rotate the line
-    const centerX = (this.x1 + this.x2) / 2;
-    const centerY = (this.y1 + this.y2) / 2;
-    const radius =
-      Math.sqrt(
-        Math.pow(this.x1 - this.x2, 2) + Math.pow(this.y1 - this.y2, 2)
-      ) / 2;
-    const angle = Math.atan2(this.y1 - this.y2, this.x1 - this.x2);
-    const handleX = centerX + radius * Math.cos(angle + Math.PI / 2);
-    const handleY = centerY + radius * Math.sin(angle + Math.PI / 2);
+    // const centerX = (this.x1 + this.x2) / 2;
+    // const centerY = (this.y1 + this.y2) / 2;
+    // const radius =
+    //   Math.sqrt(
+    //     Math.pow(this.x1 - this.x2, 2) + Math.pow(this.y1 - this.y2, 2)
+    //   ) / 2;
+    // const angle = Math.atan2(this.y1 - this.y2, this.x1 - this.x2);
+    // const handleX = centerX + radius * Math.cos(angle + Math.PI / 2);
+    // const handleY = centerY + radius * Math.sin(angle + Math.PI / 2);
 
-    ctx.fillStyle = "green";
-    ctx.fillRect(
-      handleX - handleSize / 2,
-      handleY - handleSize / 2,
-      handleSize,
-      handleSize
-    );
+    // ctx.fillStyle = "green";
+    // ctx.fillRect(
+    //   handleX - handleSize / 2,
+    //   handleY - handleSize / 2,
+    //   handleSize,
+    //   handleSize
+    // );
   }
 
   resize(newX, newY) {
@@ -163,15 +173,15 @@ class Line extends Shape {
     this.selected = true;
   }
 
-  handleMouseMove(e, ctx) {
+  handleMouseMove(e, ctx, drawImage) {
     const { x, y } = this.getMousePosition(e);
     if (this.selectedHandle) {
+      drawImage();
       this.resize(x, y);
-      //   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      //   this.draw(ctx);
-
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      this.draw(ctx);
+      //ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      setTimeout(() => {
+        this.draw(ctx);
+      }, 1);
     } else {
       this.move(x, y);
     }

@@ -12,6 +12,11 @@ import Ellipse from "./Ellipse";
 import Pencil from "./Pencil";
 import Toolbar from "./Toolbar";
 import throttle from "lodash/throttle";
+import Ruler from "./Ruler";
+import MarkUp from "./MarkUp";
+import Arrow from "./Arrow";
+import Camera from "./Camera";
+import Comment from "./Comment";
 export default {
   components: {
     Toolbar,
@@ -38,6 +43,14 @@ export default {
         this.setPencil();
       } else if (this.tool === "line") {
         this.setLine(e.offsetX, e.offsetY);
+      } else if (this.tool === "ruler") {
+        this.setRuler(e.offsetX, e.offsetY);
+      } else if (this.tool === "arrow") {
+        this.setArrow(e.offsetX, e.offsetY);
+      } else if (this.tool === "camera") {
+        this.setCamera(e.offsetX, e.offsetY);
+      } else if (this.tool === "comment") {
+        this.setComment(e.offsetX, e.offsetY);
       }
       this.tool = null;
     });
@@ -51,6 +64,7 @@ export default {
       image.src = "AQQ.png";
       image.onload = () => {
         ctx.drawImage(image, 0, 0);
+        this.drawAllMarkups();
       };
       var zoomLevel = 1;
       var scaleFactor = 1.1;
@@ -65,7 +79,7 @@ export default {
 
       // redraw the canvas at the current zoom level
       function redraw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.scale(zoomLevel, zoomLevel);
@@ -76,22 +90,63 @@ export default {
     setLine(x, y) {
       const canvas = this.$refs.canvas;
       const ctx = canvas.getContext("2d");
-
+      const id = MarkUp.addMarkUpElement({
+        type: "line",
+      });
       // Create a new line
-      const line = new Line(x, y, "red", "blue");
+      const line = new Line(x, y, id, "red", "blue");
 
       // Draw the line on the canvas
       line.draw(ctx);
       addEventListener("mousedown", (e) => line.handleMouseDown(e));
-      addEventListener("mousemove", (e) => line.handleMouseMove(e, ctx));
+      addEventListener("mousemove", (e) =>
+        line.handleMouseMove(e, ctx, this.drawImage)
+      );
       addEventListener("mouseup", (e) => line.handleMouseUp(ctx));
+    },
+    setRuler(x, y) {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext("2d");
+      const id = MarkUp.addMarkUpElement({
+        type: "ruler",
+      });
+
+      // Create a new line
+      const ruler = new Ruler(x, y, id, "red", "blue");
+
+      // Draw the line on the canvas
+      ruler.draw(ctx);
+      addEventListener("mousedown", (e) => ruler.handleMouseDown(e));
+      addEventListener("mousemove", (e) =>
+        ruler.handleMouseMove(e, ctx, this.drawImage)
+      );
+      addEventListener("mouseup", (e) => ruler.handleMouseUp(ctx));
+    },
+    setArrow(x, y) {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext("2d");
+      const id = MarkUp.addMarkUpElement({
+        type: "arrow",
+      });
+
+      // Create a new line
+      const arrow = new Arrow(x, y, id, "red", "blue");
+
+      // Draw the line on the canvas
+      arrow.draw(ctx);
+      addEventListener("mousedown", (e) => arrow.handleMouseDown(e));
+      addEventListener("mousemove", (e) =>
+        arrow.handleMouseMove(e, ctx, this.drawImage)
+      );
+      addEventListener("mouseup", (e) => arrow.handleMouseUp(ctx));
     },
     setRectangle(x, y) {
       const canvas = this.$refs.canvas;
       const ctx = canvas.getContext("2d");
+      const id = MarkUp.addMarkUpElement({});
 
       // Create a new line
-      const rectangle = new Rectangle([{ x, y }], "red", "blue");
+      const rectangle = new Rectangle([{ x, y }], id, "red", "blue");
 
       // Draw the line on the canvas
       rectangle.draw(ctx);
@@ -101,9 +156,11 @@ export default {
       const throttledMouseMove = throttle((e) => {
         rectangle.handleMouseMove(e, ctx);
       }, 15);
-      addEventListener("mousemove", (e) =>{ 
+      addEventListener("mousemove", (e) => {
         //this.drawImage();
-        throttledMouseMove(e)});
+
+        rectangle.handleMouseMove(e, ctx, this.drawImage);
+      });
       addEventListener("mouseup", (e) => rectangle.handleMouseUp(ctx));
     },
     setEllipse(x, y) {
@@ -119,6 +176,35 @@ export default {
       addEventListener("mousedown", (e) => ellipse.handleMouseDown(e));
       addEventListener("mousemove", (e) => ellipse.handleMouseMove(e, ctx));
       addEventListener("mouseup", (e) => ellipse.handleMouseUp(ctx));
+    },
+    setCamera(x, y) {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext("2d");
+
+      // Create a new line
+      const camera = new Camera([{ x, y }], "red", "blue");
+
+      // Draw the line on the canvas
+      camera.draw(ctx);
+
+      addEventListener("mousedown", (e) => camera.handleMouseDown(e));
+      addEventListener("mousemove", (e) => camera.handleMouseMove(e, ctx));
+      addEventListener("mouseup", (e) => camera.handleMouseUp(ctx));
+
+    },
+    setComment(x, y) {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext("2d");
+
+      // Create a new line
+      const comment = new Comment([{ x, y }], "red", "blue");
+
+      // Draw the line on the canvas
+      comment.draw(ctx);
+
+      addEventListener("mousedown", (e) => comment.handleMouseDown(e));
+      addEventListener("mousemove", (e) => comment.handleMouseMove(e, ctx));
+      addEventListener("mouseup", (e) => comment.handleMouseUp(ctx));
     },
     setPencil() {
       const canvas = this.$refs.canvas;
@@ -136,6 +222,22 @@ export default {
     },
     toolSelected(tool) {
       this.tool = tool;
+    },
+    drawAllMarkups() {
+      const canvas = this.$refs.canvas;
+      const ctx = canvas.getContext("2d");
+      const markups = MarkUp.getMarkUpElements();
+      for (let key in markups) {
+        if (markups[key].type === "rect") {
+          const rectangle = new Rectangle(
+            markups[key].points,
+            markups[key].id,
+            markups[key].fill,
+            markups[key].stroke
+          );
+          rectangle.draw(ctx);
+        }
+      }
     },
   },
 };

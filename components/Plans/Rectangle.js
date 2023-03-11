@@ -1,13 +1,15 @@
 import Shape from "./Shape";
+import MarkUp from "./MarkUp";
 
 const fixedWidth = 100;
 class Rectangle extends Shape {
-  constructor(points, fill, stroke) {
+  constructor(points, id, fill, stroke) {
     super(points[0].x, points[0].y, fill, stroke);
     this.points = this.getVertices(points);
     this.handleSize = 8;
     this.selectedHandle = null;
     this.selectedRect = null;
+    this.uniqueId = id;
   }
 
   getVertices(points) {
@@ -36,6 +38,14 @@ class Rectangle extends Shape {
     ctx.lineWidth = 2;
     ctx.stroke();
     this.drawHandles(ctx);
+    MarkUp.updateMarkUpElement({
+      id: this.uniqueId,
+      type: "rect",
+      points: this.points,
+      fill: this.fill,
+      stroke: this.stroke,
+    });
+    console.log(MarkUp.getMarkUpElements());
   }
 
   drawHandles(ctx) {
@@ -78,23 +88,25 @@ class Rectangle extends Shape {
     }
   }
 
-  handleMouseMove(e, ctx) {
+  handleMouseMove(e, ctx, drawImage) {
     const { x, y } = this.getMousePosition(e);
-    console.log(
-      "handleMouseMove",
-      x,
-      y,
-      this.selectedHandle,
-      this.selectedRect
-    );
     if (this.selectedHandle) {
+      drawImage();
       this.resize(x, y);
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      this.draw(ctx);
+      //ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      setTimeout(() => {
+        this.draw(ctx);
+        console.log("SquareDrawn");
+      }, 1);
     } else if (this.selectedRect) {
+      drawImage();
       this.move(x, y);
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      this.draw(ctx);
+      //ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      console.log("imageDrawn");
+      setTimeout(() => {
+        this.draw(ctx);
+        console.log("SquareDrawn");
+      }, 1);
     }
   }
 
